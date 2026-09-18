@@ -3,7 +3,9 @@ import { db } from '@/offline/db'
 import { pullChanges } from './pull'
 import { pushOutbox } from './push'
 import { startSync, syncNow } from './scheduler'
-import { getStatus } from './status'
+import { getStatus, subscribe, type SyncStatus } from './status'
+
+vi.spyOn(db.outbox, 'count').mockResolvedValue(3)
 
 vi.mock('./pull', () => ({ pullChanges: vi.fn() }))
 vi.mock('./push', () => ({ pushOutbox: vi.fn() }))
@@ -57,6 +59,55 @@ describe('syncNow', () => {
 
     await expect(syncNow()).resolves.toBeUndefined()
     expect(getStatus().syncing).toBe(false)
+  })
+
+  it('nunca expone syncing:false con un pending desactualizado tras el push', async () => {
+    localStorage.setItem('access_token', 'tok')
+    mockedPull.mockResolvedValue({ applied: 0, hasMore: false })
+    mockedPush.mockResolvedValue({ applied: 0, failed: 0 })
+
+    const snapshots: SyncStatus[] = []
+    const unsubscribe = subscribe(() => {
+      snapshots.push({ ...getStatus() })
+    })
+
+    try {
+      await syncNow()
+    } finally {
+      unsubscribe()
+    }
+
+    const finalSnapshot = snapshots[snapshots.length - 1]
+    expect(finalSnapshot.syncing).toBe(false)
+    expect(finalSnapshot.lastSyncAt).not.toBeNull()
+    expect(finalSnapshot.pending).toBe(3)
+
+    const finalPending = finalSnapshot.pending
+    for (const snap of snapshots) {
+      if (snap.syncing === false) {
+        expect(snap.pending).toBe(finalPending)
+      }
+    }
+
+    const syncingFalseCount = snapshots.filter((s) => s.syncing === false).length
+    expect(syncingFalseCount).toBe(1)
+  })
+
+  it('marca lastSyncAt sólo cuando el push termina sin errores y con pending real', async () => {
+    localStorage.setItem('access_token', 'tok')
+    mockedPull.mockResolvedValue({ applied: 0, hasMore: false })
+    mockedPush.mockResolvedValue({ applied: 0, failed: 0 })
+
+    const before = new Date().toISOString()
+    await syncNow()
+    const after = new Date().toISOString()
+
+    const final = getStatus()
+    expect(final.syncing).toBe(false)
+    expect(final.lastSyncAt).not.toBeNull()
+    expect(final.lastSyncAt! >= before).toBe(true)
+    expect(final.lastSyncAt! <= after).toBe(true)
+    expect(final.pending).toBe(3)
   })
 })
 
