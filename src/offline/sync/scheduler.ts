@@ -30,8 +30,11 @@ async function runSync(): Promise<void> {
 
     await pushOutbox()
 
-    setStatus({ syncing: false, lastSyncAt: new Date().toISOString() })
-    setStatus({ pending: await db.outbox.count() })
+    setStatus({
+      pending: await db.outbox.count(),
+      syncing: false,
+      lastSyncAt: new Date().toISOString(),
+    })
   } catch (err) {
     console.error('sincronización falló', err)
     setStatus({ syncing: false })
