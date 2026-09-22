@@ -66,7 +66,7 @@ describe('syncNow', () => {
     mockedPull.mockResolvedValue({ applied: 0, hasMore: false })
     mockedPush.mockResolvedValue({ applied: 0, failed: 0 })
 
-    const requestMock = vi.fn().mockImplementation((name, options, cb) => {
+    const requestMock = vi.fn().mockImplementation((_name, _options, cb) => {
       return cb({}) // Simulate lock acquired
     })
 
@@ -84,7 +84,7 @@ describe('syncNow', () => {
     mockedPull.mockResolvedValue({ applied: 0, hasMore: false })
     mockedPush.mockResolvedValue({ applied: 0, failed: 0 })
 
-    const requestMock = vi.fn().mockImplementation((name, options, cb) => {
+    const requestMock = vi.fn().mockImplementation((_name, _options, cb) => {
       return cb(null) // Simulate lock denied
     })
 
