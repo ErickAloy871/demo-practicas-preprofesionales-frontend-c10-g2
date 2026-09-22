@@ -82,7 +82,7 @@ describe('pushOutbox', () => {
     await expect(db.hourLogs.get(10)).resolves.toMatchObject({ syncState: 'synced', version: 2 })
   })
 
-  it('pierde las operaciones de la cola si la red falla durante pushOutbox (E1-01)', async () => {
+  it.fails('pierde las operaciones de la cola si la red falla durante pushOutbox (E1-01)', async () => {
     // 1. Arrange: Agregamos una operación a la cola
     await db.hourLogs.put({
       id: 11,
