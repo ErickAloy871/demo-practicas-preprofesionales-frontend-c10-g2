@@ -81,4 +81,39 @@ describe('pushOutbox', () => {
     await expect(db.outbox.count()).resolves.toBe(0)
     await expect(db.hourLogs.get(10)).resolves.toMatchObject({ syncState: 'synced', version: 2 })
   })
+
+  it.fails('pierde las operaciones de la cola si la red falla durante pushOutbox (E1-01)', async () => {
+    // 1. Arrange: Agregamos una operación a la cola
+    await db.hourLogs.put({
+      id: 11,
+      placementId: 1,
+      date: '2026-04-01',
+      startTime: '08:00',
+      endTime: '12:00',
+      hours: 4,
+      activity: 'Soporte',
+      status: 'SUBMITTED',
+      version: 1,
+      updatedAt: '2026-04-01T00:00:00.000Z',
+      syncState: 'local',
+    })
+    await enqueue({
+      entity: 'hourLog',
+      op: 'create',
+      payload: { id: 11, hours: 4 },
+      baseVersion: null,
+    })
+
+    // Simulamos fallo de red al hacer push
+    mockedApi.mockRejectedValue(new Error('Network offline'))
+
+    // 2. Act: pushOutbox fallará por el error de red
+    await expect(pushOutbox()).rejects.toThrow('Network offline')
+
+    // 3. Assert: ESTE TEST FALLA HOY. Las operaciones se borran del outbox ANTES
+    // de confirmar la respuesta del servidor, por lo que se pierden para siempre.
+    // El outbox debería mantener la operación si la red falla, pero hoy está vacio (0).
+    const outboxCount = await db.outbox.count()
+    expect(outboxCount).toBe(1) // Falla aquí: espera 1 pero recibe 0.
+  })
 })
