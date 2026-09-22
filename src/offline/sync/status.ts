@@ -16,9 +16,8 @@ let state: SyncStatus = {
 
 const listeners = new Set<Listener>()
 
-let channel: BroadcastChannel | null = null
-// Evitamos crearlo en tests porque Vitest se queda colgado esperando que el canal se cierre.
-if (typeof BroadcastChannel !== 'undefined' && typeof import.meta !== 'undefined' && !import.meta.env?.TEST) {
+export let channel: BroadcastChannel | null = null
+if (typeof BroadcastChannel !== 'undefined') {
   channel = new BroadcastChannel('yura-sync-status')
   channel.onmessage = (event) => {
     state = { ...state, ...event.data }
