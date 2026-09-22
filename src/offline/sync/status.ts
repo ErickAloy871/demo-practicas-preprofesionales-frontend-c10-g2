@@ -16,13 +16,18 @@ let state: SyncStatus = {
 
 const listeners = new Set<Listener>()
 
-export let channel: BroadcastChannel | null = null
+let channel: BroadcastChannel | null = null
 if (typeof BroadcastChannel !== 'undefined') {
   channel = new BroadcastChannel('yura-sync-status')
   channel.onmessage = (event) => {
     state = { ...state, ...event.data }
     for (const listener of listeners) listener()
   }
+}
+
+// Expuesto únicamente para limpiar los tests sin exportar variables mutables.
+export function closeSyncChannel(): void {
+  if (channel) channel.close()
 }
 
 export function getStatus(): SyncStatus {
