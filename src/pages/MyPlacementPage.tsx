@@ -185,7 +185,7 @@ function RecentLogs({ logs }: { logs: LocalHourLog[] | undefined }) {
     <Section title="Últimos registros de horas" aside={aside}>
       <Ledger>
         {recent.map((log, index) => (
-          <LedgerRow key={index} syncState={log.syncState} note={log.reviewNote}>
+          <LedgerRow key={index} syncState={log.syncState}>
             <span className="font-data text-14 text-ink sm:w-28">{formatDate(log.date)}</span>
             <span className="font-data text-13 text-inkSoft sm:w-28">
               {log.startTime}–{log.endTime}
