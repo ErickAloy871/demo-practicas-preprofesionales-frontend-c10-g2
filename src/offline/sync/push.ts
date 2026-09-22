@@ -96,7 +96,9 @@ export async function pushOutbox(config: RetryConfig = DEFAULT_RETRY_CONFIG): Pr
       })
 
       await applyResults(results, localIds)
-      await db.outbox.bulkDelete(entries.map((e) => e.id as number))
+      const processedOpIds = new Set(results.map((r) => r.clientOpId))
+      const processedIds = entries.filter((e) => processedOpIds.has(e.clientOpId)).map((e) => e.id as number)
+      await db.outbox.bulkDelete(processedIds)
       return {
         applied: results.filter((r) => r.status === 'applied').length,
         failed: results.filter((r) => r.status !== 'applied').length,
