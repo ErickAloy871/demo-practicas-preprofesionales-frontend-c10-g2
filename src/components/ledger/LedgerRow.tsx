@@ -6,9 +6,10 @@ interface LedgerRowProps {
   syncState: SyncState
   children: ReactNode
   className?: string
+  note?: string | null
 }
 
-export function LedgerRow({ syncState, children, className }: LedgerRowProps) {
+export function LedgerRow({ syncState, children, className, note }: LedgerRowProps) {
   return (
     <div
       className={cn(
@@ -17,8 +18,9 @@ export function LedgerRow({ syncState, children, className }: LedgerRowProps) {
       )}
     >
       <SyncGutter state={syncState} />
-      <div className="flex flex-1 flex-col justify-center gap-1 sm:flex-row sm:items-center sm:gap-3">
-        {children}
+      <div className="flex flex-1 flex-col justify-center gap-1">
+        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">{children}</div>
+        {syncState === 'failed' && note ? <p className="text-12 text-void">{note}</p> : null}
       </div>
     </div>
   )

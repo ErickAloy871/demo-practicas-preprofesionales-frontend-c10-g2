@@ -62,7 +62,7 @@ function HourLogsList({ logs }: { logs: LocalHourLog[] }) {
         .slice()
         .reverse()
         .map((log) => (
-          <LedgerRow key={log.id} syncState={log.syncState}>
+          <LedgerRow key={log.id} syncState={log.syncState} note={log.reviewNote}>
             <span className="font-data text-14 text-ink sm:w-28">{formatDate(log.date)}</span>
             <span className="font-data text-13 text-inkSoft sm:w-28">
               {log.startTime}–{log.endTime}
