@@ -1,7 +1,7 @@
 import { db } from '@/offline/db'
 import { pullChanges } from './pull'
 import { pushOutbox } from './push'
-import { setStatus } from './status'
+import { getStatus, setStatus } from './status'
 
 const SYNC_INTERVAL_MS = 60_000
 // Tope de rondas de pull por corrida: evita que un servidor que siempre
@@ -43,10 +43,23 @@ async function runSync(): Promise<void> {
 
 /** Corre pull + push. Si ya hay una corrida en curso, la reutiliza en vez de duplicarla. */
 export function syncNow(): Promise<void> {
+  if (getStatus().syncing) {
+    return Promise.resolve()
+  }
+
   if (!currentSync) {
-    currentSync = runSync().finally(() => {
-      currentSync = null
-    })
+    if (typeof navigator !== 'undefined' && navigator.locks) {
+      currentSync = navigator.locks.request('yura-sync-lock', { ifAvailable: true }, async (lock) => {
+        if (!lock) return
+        await runSync()
+      }).finally(() => {
+        currentSync = null
+      })
+    } else {
+      currentSync = runSync().finally(() => {
+        currentSync = null
+      })
+    }
   }
   return currentSync
 }
