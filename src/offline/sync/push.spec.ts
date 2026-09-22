@@ -82,8 +82,7 @@ describe('pushOutbox', () => {
     await expect(db.hourLogs.get(10)).resolves.toMatchObject({ syncState: 'synced', version: 2 })
   })
 
-  it('pierde las operaciones de la cola si la red falla durante pushOutbox (E1-01)', async () => {
-    // 1. Arrange: Agregamos una operación a la cola
+  it('reintenta con espera creciente y deja la operación fallida al agotar el máximo', async () => {
     await db.hourLogs.put({
       id: 11,
       placementId: 1,
@@ -97,23 +96,47 @@ describe('pushOutbox', () => {
       updatedAt: '2026-04-01T00:00:00.000Z',
       syncState: 'local',
     })
-    await enqueue({
-      entity: 'hourLog',
-      op: 'create',
-      payload: { id: 11, hours: 4 },
-      baseVersion: null,
+    await enqueue({ entity: 'hourLog', op: 'create', payload: { id: 11, hours: 4 }, baseVersion: null })
+    mockedApi.mockRejectedValue(new Error('sin conexión'))
+    vi.useFakeTimers()
+
+    try {
+      const promise = pushOutbox({ baseDelayMs: 10, maxDelayMs: 20, maxAttempts: 3 })
+      await vi.runAllTimersAsync()
+      await expect(promise).resolves.toEqual({ applied: 0, failed: 1 })
+    } finally {
+      vi.useRealTimers()
+    }
+
+    expect(mockedApi).toHaveBeenCalledTimes(3)
+    await expect(db.outbox.toArray()).resolves.toMatchObject([{ attempts: 3, lastError: 'sin conexión' }])
+    await expect(db.hourLogs.get(11)).resolves.toMatchObject({ syncState: 'failed', reviewNote: 'sin conexión' })
+  })
+
+  it('espera a recuperar la conexión antes de iniciar un intento', async () => {
+    await db.hourLogs.put({
+      id: 12,
+      placementId: 1,
+      date: '2026-04-01',
+      startTime: '08:00',
+      endTime: '12:00',
+      hours: 4,
+      activity: 'Soporte',
+      status: 'SUBMITTED',
+      version: 1,
+      updatedAt: '2026-04-01T00:00:00.000Z',
+      syncState: 'local',
     })
+    await enqueue({ entity: 'hourLog', op: 'create', payload: { id: 12, hours: 4 }, baseVersion: null })
+    mockedApi.mockResolvedValue({ results: [] })
+    Object.defineProperty(navigator, 'onLine', { configurable: true, value: false })
 
-    // Simulamos fallo de red al hacer push
-    mockedApi.mockRejectedValue(new Error('Network offline'))
+    const promise = pushOutbox({ baseDelayMs: 1, maxDelayMs: 1, maxAttempts: 1 })
+    await Promise.resolve()
+    expect(mockedApi).not.toHaveBeenCalled()
 
-    // 2. Act: pushOutbox fallará por el error de red
-    await expect(pushOutbox()).rejects.toThrow('Network offline')
-
-    // 3. Assert: ESTE TEST FALLA HOY. Las operaciones se borran del outbox ANTES
-    // de confirmar la respuesta del servidor, por lo que se pierden para siempre.
-    // El outbox debería mantener la operación si la red falla, pero hoy está vacio (0).
-    const outboxCount = await db.outbox.count()
-    expect(outboxCount).toBe(1) // Falla aquí: espera 1 pero recibe 0.
+    Object.defineProperty(navigator, 'onLine', { configurable: true, value: true })
+    window.dispatchEvent(new Event('online'))
+    await expect(promise).resolves.toEqual({ applied: 0, failed: 0 })
   })
 })
