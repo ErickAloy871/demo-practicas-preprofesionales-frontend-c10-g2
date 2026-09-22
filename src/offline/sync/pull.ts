@@ -1,5 +1,6 @@
 import { api } from '@/api/client'
 import { db, type LocalDocument, type LocalEvaluation, type LocalHourLog, type LocalPlacement } from '@/offline/db'
+import { isRetryable } from './retry'
 
 type Tombstoned<T> = T & { deletedAt?: string | null }
 
@@ -26,7 +27,7 @@ async function applyPlacements(rows: PullChanges['placements']): Promise<void> {
 async function applyHourLogs(rows: PullChanges['hourLogs']): Promise<void> {
   const queuedOutbox = await db.outbox.where('entity').equals('hourLog').toArray()
   const queuedIds = new Set(
-    queuedOutbox.map((entry) => entry.payload.id).filter((id): id is number => typeof id === 'number'),
+    queuedOutbox.filter((entry) => isRetryable(entry)).map((entry) => entry.payload.id).filter((id): id is number => typeof id === 'number'),
   )
 
   for (const row of rows) {
