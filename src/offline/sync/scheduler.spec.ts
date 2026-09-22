@@ -61,6 +61,43 @@ describe('syncNow', () => {
     expect(getStatus().syncing).toBe(false)
   })
 
+  it('utiliza navigator.locks si está disponible para evitar colisiones entre pestañas', async () => {
+    localStorage.setItem('access_token', 'tok')
+    mockedPull.mockResolvedValue({ applied: 0, hasMore: false })
+    mockedPush.mockResolvedValue({ applied: 0, failed: 0 })
+
+    const requestMock = vi.fn().mockImplementation((_name, _options, cb) => {
+      return cb({}) // Simulate lock acquired
+    })
+
+    vi.stubGlobal('navigator', { locks: { request: requestMock } })
+
+    await syncNow()
+
+    expect(requestMock).toHaveBeenCalledWith('yura-sync-lock', { ifAvailable: true }, expect.any(Function))
+    
+    vi.unstubAllGlobals()
+  })
+
+  it('no hace nada si navigator.locks deniega el lock (otra pestaña sincronizando)', async () => {
+    localStorage.setItem('access_token', 'tok')
+    mockedPull.mockResolvedValue({ applied: 0, hasMore: false })
+    mockedPush.mockResolvedValue({ applied: 0, failed: 0 })
+
+    const requestMock = vi.fn().mockImplementation((_name, _options, cb) => {
+      return cb(null) // Simulate lock denied
+    })
+
+    vi.stubGlobal('navigator', { locks: { request: requestMock } })
+
+    await syncNow()
+
+    expect(mockedPull).not.toHaveBeenCalled()
+    expect(mockedPush).not.toHaveBeenCalled()
+    
+    vi.unstubAllGlobals()
+  })
+
   it('nunca expone syncing:false con un pending desactualizado tras el push', async () => {
     localStorage.setItem('access_token', 'tok')
     mockedPull.mockResolvedValue({ applied: 0, hasMore: false })
