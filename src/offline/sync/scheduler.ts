@@ -49,7 +49,7 @@ export function syncNow(): Promise<void> {
 
   if (!currentSync) {
     if (typeof navigator !== 'undefined' && navigator.locks) {
-      currentSync = navigator.locks.request('yura-sync-lock', { ifAvailable: true }, async (lock) => {
+      currentSync = navigator.locks.request<void>('yura-sync-lock', { ifAvailable: true }, async (lock) => {
         if (!lock) return
         await runSync()
       }).finally(() => {
@@ -61,7 +61,7 @@ export function syncNow(): Promise<void> {
       })
     }
   }
-  return currentSync
+  return currentSync || Promise.resolve()
 }
 
 /**
