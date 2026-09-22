@@ -44,14 +44,17 @@ export async function pushOutbox(): Promise<{ applied: number; failed: number }>
   // así que el mapa se captura en memoria antes de vaciarlo.
   const localIds = new Map(entries.map((e) => [e.clientOpId, Number(e.payload.id)]))
 
-  await db.outbox.bulkDelete(entries.map((e) => e.id as number))
-
   const { results } = await api<{ results: SyncOperationResult[] }>('/sync/push', {
     method: 'POST',
     body: JSON.stringify({ ops }),
   })
 
   await applyResults(results, localIds)
+
+  const processedOpIds = new Set(results.map((r) => r.clientOpId))
+  const processedIds = entries.filter((e) => processedOpIds.has(e.clientOpId)).map((e) => e.id as number)
+  await db.outbox.bulkDelete(processedIds)
+
   return {
     applied: results.filter((r) => r.status === 'applied').length,
     failed: results.filter((r) => r.status !== 'applied').length,
