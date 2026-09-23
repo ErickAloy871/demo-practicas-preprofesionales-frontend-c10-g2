@@ -1,6 +1,7 @@
 import { api } from '@/api/client'
 import { db, type OutboxEntry } from '@/offline/db'
 import { applyResults, type SyncOperationResult } from './conflict'
+import { DEFAULT_RETRY_CONFIG, isRetryable, retryDelayMs, type RetryConfig } from './retry'
 import { setStatus } from './status'
 
 export async function enqueue(
@@ -28,32 +29,88 @@ export async function enqueue(
   setStatus({ pending: await db.outbox.count() })
 }
 
-export async function pushOutbox(): Promise<{ applied: number; failed: number }> {
-  const entries = await db.outbox.orderBy('createdAt').limit(500).toArray()
+function isOnline(): boolean {
+  return typeof navigator === 'undefined' || navigator.onLine
+}
+
+function waitForOnline(): Promise<void> {
+  if (isOnline()) return Promise.resolve()
+
+  return new Promise((resolve) => {
+    const handleOnline = () => {
+      window.removeEventListener('online', handleOnline)
+      resolve()
+    }
+    window.addEventListener('online', handleOnline)
+  })
+}
+
+function wait(ms: number): Promise<void> {
+  return new Promise((resolve) => window.setTimeout(resolve, ms))
+}
+
+async function waitBeforeRetry(attempt: number, config: RetryConfig): Promise<void> {
+  const deadline = Date.now() + retryDelayMs(attempt, config)
+  while (Date.now() < deadline) {
+    await waitForOnline()
+    await wait(Math.max(0, deadline - Date.now()))
+  }
+}
+
+async function recordFailure(entries: OutboxEntry[], error: unknown, attempt: number, config: RetryConfig): Promise<void> {
+  const lastError = error instanceof Error ? error.message : String(error)
+  await db.transaction('rw', [db.outbox, db.hourLogs], async () => {
+    for (const entry of entries) {
+      const attempts = entry.attempts + attempt
+      await db.outbox.update(entry.id as number, { attempts, lastError })
+      if (attempts >= config.maxAttempts) {
+        const rowId = entry.payload.id
+        if (typeof rowId === 'number') {
+          await db.hourLogs.update(rowId, { syncState: 'failed', reviewNote: lastError })
+        }
+      }
+    }
+  })
+}
+
+export async function pushOutbox(config: RetryConfig = DEFAULT_RETRY_CONFIG): Promise<{ applied: number; failed: number }> {
+  const entries = (await db.outbox.orderBy('createdAt').limit(500).toArray()).filter((entry) => isRetryable(entry, config))
   if (entries.length === 0) return { applied: 0, failed: 0 }
 
-  const ops = entries.map((e) => ({
-    clientOpId: e.clientOpId,
-    entity: e.entity,
-    op: e.op,
-    baseVersion: e.baseVersion,
-    payload: e.payload,
-  }))
+  for (let attempt = 1; attempt <= config.maxAttempts; attempt += 1) {
+    await waitForOnline()
+    await db.outbox.bulkUpdate(entries.map((entry) => ({ key: entry.id as number, changes: { attempts: entry.attempts + attempt } })))
 
-  // El outbox es lo único que sabe qué id local le corresponde a cada operación,
-  // así que el mapa se captura en memoria antes de vaciarlo.
-  const localIds = new Map(entries.map((e) => [e.clientOpId, Number(e.payload.id)]))
+    try {
+      const ops = entries.map((e) => ({
+        clientOpId: e.clientOpId,
+        entity: e.entity,
+        op: e.op,
+        baseVersion: e.baseVersion,
+        payload: e.payload,
+      }))
+      const localIds = new Map(entries.map((e) => [e.clientOpId, Number(e.payload.id)]))
+      const { results } = await api<{ results: SyncOperationResult[] }>('/sync/push', {
+        method: 'POST',
+        body: JSON.stringify({ ops }),
+      })
 
-  await db.outbox.bulkDelete(entries.map((e) => e.id as number))
-
-  const { results } = await api<{ results: SyncOperationResult[] }>('/sync/push', {
-    method: 'POST',
-    body: JSON.stringify({ ops }),
-  })
-
-  await applyResults(results, localIds)
-  return {
-    applied: results.filter((r) => r.status === 'applied').length,
-    failed: results.filter((r) => r.status !== 'applied').length,
+      await applyResults(results, localIds)
+      const processedOpIds = new Set(results.map((r) => r.clientOpId))
+      const processedIds = entries.filter((e) => processedOpIds.has(e.clientOpId)).map((e) => e.id as number)
+      await db.outbox.bulkDelete(processedIds)
+      return {
+        applied: results.filter((r) => r.status === 'applied').length,
+        failed: results.filter((r) => r.status !== 'applied').length,
+      }
+    } catch (error) {
+      await recordFailure(entries, error, attempt, config)
+      if (attempt === config.maxAttempts) {
+        return { applied: 0, failed: entries.length }
+      }
+      await waitBeforeRetry(attempt, config)
+    }
   }
+
+  return { applied: 0, failed: entries.length }
 }
