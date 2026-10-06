@@ -31,7 +31,7 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
   if (res.status === 401 && path !== '/auth/login' && path !== '/auth/refresh') {
     if (!isRefreshing) {
       isRefreshing = true
-      refreshPromise = req().then(async () => {
+      refreshPromise = (async () => {
         const refreshRes = await fetch(`${API_URL}/auth/refresh`, {
           method: 'POST',
           headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` },
@@ -40,7 +40,7 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
         const data = await refreshRes.json()
         localStorage.setItem('access_token', data.accessToken)
         return data.accessToken
-      }).catch(() => {
+      })().catch(() => {
         window.dispatchEvent(new CustomEvent('auth:unauthorized'))
         return null
       }).finally(() => {

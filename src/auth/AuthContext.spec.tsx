@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { act, renderHook } from '@testing-library/react'
+import { act, renderHook, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { api } from '@/api/client'
@@ -131,5 +131,48 @@ describe('AuthProvider', () => {
 
     expect(await db.placements.count()).toBe(0)
     expect(await db.meta.count()).toBe(0)
+  })
+
+  it('handles auth:unauthorized event by logging out', async () => {
+    vi.mocked(api).mockResolvedValue({
+      accessToken: 'tok-123',
+      user: { id: 5, email: 'empresa0@miyura.com', fullName: 'Empresa 0', role: 'COMPANY', companyId: 1 },
+    })
+    const { result } = renderHook(() => useAuth(), { wrapper: withProvider })
+    await act(async () => {
+      await result.current.login('empresa0@miyura.com', 'yura1234')
+    })
+
+    await act(async () => {
+      window.dispatchEvent(new CustomEvent('auth:unauthorized'))
+      // El manejador del evento llama a logout() de forma asíncrona pero sin await.
+      // Damos un pequeño respiro para que las promesas (api, db) terminen.
+      await new Promise((resolve) => setTimeout(resolve, 50))
+    })
+
+    expect(localStorage.getItem('access_token')).toBeNull()
+    expect(result.current.user).toBeNull()
+  })
+
+  it('handles storage event when another tab clears access_token', async () => {
+    vi.mocked(api).mockResolvedValue({
+      accessToken: 'tok-123',
+      user: { id: 5, email: 'empresa0@miyura.com', fullName: 'Empresa 0', role: 'COMPANY', companyId: 1 },
+    })
+    const { result } = renderHook(() => useAuth(), { wrapper: withProvider })
+    await act(async () => {
+      await result.current.login('empresa0@miyura.com', 'yura1234')
+    })
+
+    await act(async () => {
+      // Simulate another tab clearing the token
+      const event = new StorageEvent('storage', {
+        key: 'access_token',
+        newValue: null,
+      })
+      window.dispatchEvent(event)
+    })
+
+    expect(result.current.user).toBeNull()
   })
 })
