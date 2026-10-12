@@ -22,6 +22,7 @@ beforeEach(async () => {
 
 describe('HourLogsPage', () => {
   it('shows the rejection reason for an hour log the server rejected', async () => {
+    localStorage.setItem('access_token', 'test-access-token')
     localStorage.setItem(
       'user',
       JSON.stringify({ id: 5, email: 'estudiante0@miyura.com', fullName: 'Estudiante', role: 'STUDENT', companyId: null }),
