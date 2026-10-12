@@ -1,9 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { api } from '@/api/client'
+import { api, ApiError } from '@/api/client'
 import { db } from '@/offline/db'
 import { enqueue, pushOutbox } from './push'
 
-vi.mock('@/api/client', () => ({ api: vi.fn() }))
+vi.mock('@/api/client', async (importOriginal) => ({
+  ...await importOriginal<typeof import('@/api/client')>(), api: vi.fn(),
+}))
 
 const mockedApi = vi.mocked(api)
 
@@ -42,6 +44,13 @@ describe('enqueue', () => {
 })
 
 describe('pushOutbox', () => {
+  it('does not retry an expired session or mark private data as failed', async () => {
+    await enqueue({ entity: 'hourLog', op: 'create', payload: { id: 99 }, baseVersion: null })
+    mockedApi.mockRejectedValue(new ApiError(401, 'Sesión expirada'))
+    await expect(pushOutbox()).rejects.toMatchObject({ statusCode: 401 })
+    expect(mockedApi).toHaveBeenCalledTimes(1)
+    expect((await db.outbox.toArray())[0].lastError).toBeNull()
+  })
   it('no llama a la red cuando el outbox está vacío', async () => {
     const result = await pushOutbox()
 
