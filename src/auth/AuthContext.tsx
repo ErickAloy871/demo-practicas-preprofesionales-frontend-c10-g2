@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '@/api/client'
 import { db } from '@/offline/db'
@@ -57,14 +57,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Una máquina de laboratorio compartida es el caso normal de este dominio:
   // si no se borra Dexie, el checkpoint de sync y los datos del estudiante
   // anterior sobreviven a esta sesión y contaminan la del siguiente.
-  async function logout() {
+  async function logout(reason?: string) {
+    try {
+      await api('/auth/logout', { method: 'POST' })
+    } catch {
+      // Ignorar si falla, ej. si el token ya expiró
+    }
     await db.delete()
     await db.open()
     localStorage.removeItem('access_token')
     localStorage.removeItem('user')
     setUser(null)
-    navigate('/login')
+    navigate('/login', { state: { message: reason } })
   }
+
+  useEffect(() => {
+    function handleUnauthorized() {
+      logout('Tu sesión ha expirado.')
+    }
+    
+    function handleStorageChange(event: StorageEvent) {
+      if (event.key === 'access_token' && !event.newValue) {
+        // Otro tab cerró la sesión
+        setUser(null)
+        navigate('/login', { state: { message: 'Sesión cerrada en otra pestaña.' } })
+      }
+    }
+
+    window.addEventListener('auth:unauthorized', handleUnauthorized)
+    window.addEventListener('storage', handleStorageChange)
+    
+    return () => {
+      window.removeEventListener('auth:unauthorized', handleUnauthorized)
+      window.removeEventListener('storage', handleStorageChange)
+    }
+  }, [])
 
   return (
     <AuthContext.Provider value={{ user, role: user?.role ?? null, login, logout }}>
