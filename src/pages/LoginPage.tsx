@@ -1,4 +1,4 @@
-import { type FormEvent, useState } from 'react'
+import { type FormEvent, useEffect, useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { ApiError } from '@/api/client'
 import { useAuth } from '@/auth/AuthContext'
@@ -14,6 +14,9 @@ export function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(location.state?.message ?? null)
   const [submitting, setSubmitting] = useState(false)
+  useEffect(() => {
+    setError(location.state?.message ?? null)
+  }, [location.state])
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
