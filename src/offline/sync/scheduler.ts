@@ -1,4 +1,5 @@
 import { db } from '@/offline/db'
+import { ApiError } from '@/api/client'
 import { pullChanges } from './pull'
 import { pushOutbox } from './push'
 import { getStatus, setStatus } from './status'
@@ -36,7 +37,9 @@ async function runSync(): Promise<void> {
       lastSyncAt: new Date().toISOString(),
     })
   } catch (err) {
-    console.error('sincronización falló', err)
+    if (!(err instanceof ApiError && err.statusCode === 401)) {
+      console.error('sincronización falló', err)
+    }
     setStatus({ syncing: false })
   }
 }

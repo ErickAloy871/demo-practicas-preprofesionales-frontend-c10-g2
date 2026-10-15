@@ -1,4 +1,4 @@
-import { api } from '@/api/client'
+import { api, ApiError } from '@/api/client'
 import { db, type OutboxEntry } from '@/offline/db'
 import { applyResults, type SyncOperationResult } from './conflict'
 import { DEFAULT_RETRY_CONFIG, isRetryable, retryDelayMs, type RetryConfig } from './retry'
@@ -104,6 +104,7 @@ export async function pushOutbox(config: RetryConfig = DEFAULT_RETRY_CONFIG): Pr
         failed: results.filter((r) => r.status !== 'applied').length,
       }
     } catch (error) {
+      if (error instanceof ApiError && error.statusCode === 401) throw error
       await recordFailure(entries, error, attempt, config)
       if (attempt === config.maxAttempts) {
         return { applied: 0, failed: entries.length }

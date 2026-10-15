@@ -52,6 +52,20 @@ Contraseña `yura1234` para todos:
 | Empresa | `empresa0@miyura.com` … `empresa11@miyura.com` |
 | Estudiante | `estudiante0@miyura.com` … `estudiante199@miyura.com` |
 
+### Sesión y cierre de sesión
+
+El access token se guarda localmente y dura lo indicado por `JWT_EXPIRES_IN` en el
+backend (15 minutos por defecto). El cliente incluye cookies en las llamadas; ante un
+401 intenta rotar la sesión con la cookie HttpOnly antes de mostrar un error. Si ya no
+se puede renovar, redirige al login con el aviso de sesión expirada. Cerrar sesión
+invalida la sesión en el servidor, borra el token, el usuario y la base local Dexie; las
+otras pestañas detectan el cierre mediante el evento `storage`.
+
+Las sesiones inactivas también caducan sin peticiones: se comprueba `exp` cada segundo,
+al recuperar el foco y al volver visible la pestaña. Al cerrar se vacían todas las tablas
+de IndexedDB y el almacenamiento de sesión; se descartan respuestas tardías de una
+sesión anterior. El aviso de expiración aparece en `/login`.
+
 ## Architecture
 
 ```
