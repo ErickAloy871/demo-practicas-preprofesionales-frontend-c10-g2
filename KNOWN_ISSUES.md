@@ -5,18 +5,16 @@ Lo que sabemos que está mal y no alcanzamos a arreglar antes de entregar esto.
 Si encuentras algo que no está acá, agrégalo. Casi seguro hay más. No tuvimos tiempo de
 auditar todo el repo, solo de anotar lo que nos mordió mientras construíamos.
 
-## D-06 · La validación de horas está en tres lados
+## D-06 · Resuelto: validación diaria de horas unificada
 
-`src/components/HourLogForm.tsx` (este repo), más `src/hour-log/dto/create-hour-log.dto.ts`
-y `src/hour-log/hour-log.service.ts` en el backend.
+La auditoría encontró cinco copias, no tres: el DTO del backend permitía hasta 12 h; la
+creación y la exportación del servicio cortaban en 10 h; y este formulario repetía dos
+funciones con tope de 8 h. La sincronización tampoco verificaba el límite.
 
-Y encima, en el frontend está duplicada dos veces sobre sí misma: `validateHoursOnSubmit` y
-`validateHoursLive` son la misma regla copiada a mano, una para cuando se envía el
-formulario y otra para el aviso que aparece mientras el estudiante todavía está escribiendo.
-Acá el tope es 8 horas. El DTO del backend permite hasta 12. El servicio del backend corta
-en 10. Tres números para la misma regla de negocio y ninguno coincide con los otros dos.
-Nadie recuerda cuál es el correcto. Probablemente ninguno. Hay que preguntarle a alguien de
-la unidad de vinculación cuántas horas se pueden registrar por día antes de tocar esto.
+La coordinación confirmó que las actividades de un estudiante se suman por fecha, incluso
+entre plazas, y no pueden superar 8 h diarias. El formulario usa una única regla y mensaje
+en `src/lib/hour-log-validation.ts`; el backend tiene la misma configuración en
+`src/hour-log/hour-log.validation.ts` y también la aplica al sincronizar.
 
 ## D-08 · El indicador de sync miente por una ventana corta
 

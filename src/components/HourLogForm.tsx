@@ -1,10 +1,12 @@
 import { type FormEvent, useState } from 'react'
+import { useLiveQuery } from 'dexie-react-hooks'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { db, type LocalHourLog } from '@/offline/db'
 import { enqueue } from '@/offline/sync/push'
+import { sumHoursForDate, validateHourLogValues } from '@/lib/hour-log-validation'
 
 interface HourLogFormProps {
   placementId: number
@@ -65,44 +67,37 @@ function computeDurationLabel(startTime: string, endTime: string): string | null
   return `Duración calculada: ${diffHours.toFixed(1)} h`
 }
 
-// D-06 (copia 3): límite de horas por registro. El DTO del backend acepta
-// hasta 12 horas y su propio servicio corta en 10; aquí, en el formulario,
-// el tope es 8. Los tres umbrales divergen a propósito y no se unifican.
-function validateHoursOnSubmit(hours: string, startTime: string, endTime: string): string | null {
-  const hoursValue = Number(hours)
-  if (!hours || Number.isNaN(hoursValue)) {
-    return 'Ingresa un número de horas válido'
-  }
-  if (hoursValue <= 0) {
-    return 'Las horas deben ser mayores a 0'
-  }
-  if (hoursValue > 8) {
-    return 'No puedes registrar más de 8 horas en un mismo día'
-  }
-  if (startTime && endTime && endTime <= startTime) {
-    return 'La hora de fin debe ser posterior a la de inicio'
-  }
-  return null
-}
+function buildFormErrors({
+  date,
+  startTime,
+  endTime,
+  hours,
+  activity,
+  dailyHours,
+}: {
+  date: string
+  startTime: string
+  endTime: string
+  hours: string
+  activity: string
+  dailyHours: number
+}): FormErrors {
+  const errors: FormErrors = {}
 
-// Mismo chequeo que arriba, copiado (no reutilizado) para el aviso que se
-// muestra en vivo bajo el campo Horas mientras el estudiante escribe, antes
-// de siquiera intentar guardar.
-function validateHoursLive(hours: string, startTime: string, endTime: string): string | null {
-  const hoursValue = Number(hours)
-  if (!hours || Number.isNaN(hoursValue)) {
-    return 'Ingresa un número de horas válido'
-  }
-  if (hoursValue <= 0) {
-    return 'Las horas deben ser mayores a 0'
-  }
-  if (hoursValue > 8) {
-    return 'No puedes registrar más de 8 horas en un mismo día'
-  }
-  if (startTime && endTime && endTime <= startTime) {
-    return 'La hora de fin debe ser posterior a la de inicio'
-  }
-  return null
+  if (!date) errors.date = 'La fecha es obligatoria'
+  if (!startTime) errors.startTime = 'La hora de inicio es obligatoria'
+  if (!endTime) errors.endTime = 'La hora de fin es obligatoria'
+  if (!activity.trim()) errors.activity = 'Describe la actividad realizada'
+
+  const hoursMessage = validateHourLogValues({
+    hours: Number(hours),
+    startTime,
+    endTime,
+    alreadyRegisteredHours: dailyHours,
+  })
+  if (hoursMessage) errors.hours = hoursMessage
+
+  return errors
 }
 
 export function HourLogForm({ placementId, onSaved }: HourLogFormProps) {
@@ -117,7 +112,10 @@ export function HourLogForm({ placementId, onSaved }: HourLogFormProps) {
 
   const confirmationLabel = formatDateForConfirmation(date)
   const durationLabel = computeDurationLabel(startTime, endTime)
-  const liveHoursWarning = hours ? validateHoursLive(hours, startTime, endTime) : null
+  const dailyHours = useLiveQuery(async () => sumHoursForDate(await db.hourLogs.toArray(), date), [date], 0) ?? 0
+  const liveHoursWarning = hours
+    ? validateHourLogValues({ hours: Number(hours), startTime, endTime, alreadyRegisteredHours: dailyHours })
+    : null
 
   function resetForm() {
     setDate(todayAsInputValue())
@@ -128,35 +126,11 @@ export function HourLogForm({ placementId, onSaved }: HourLogFormProps) {
     setErrors({})
   }
 
-  function buildErrors(): FormErrors {
-    const nextErrors: FormErrors = {}
-
-    if (!date) {
-      nextErrors.date = 'La fecha es obligatoria'
-    }
-    if (!startTime) {
-      nextErrors.startTime = 'La hora de inicio es obligatoria'
-    }
-    if (!endTime) {
-      nextErrors.endTime = 'La hora de fin es obligatoria'
-    }
-    if (!activity.trim()) {
-      nextErrors.activity = 'Describe la actividad realizada'
-    }
-
-    const hoursMessage = validateHoursOnSubmit(hours, startTime, endTime)
-    if (hoursMessage) {
-      nextErrors.hours = hoursMessage
-    }
-
-    return nextErrors
-  }
-
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setSubmitError(null)
 
-    const nextErrors = buildErrors()
+    const nextErrors = buildFormErrors({ date, startTime, endTime, hours, activity, dailyHours })
     setErrors(nextErrors)
     if (Object.keys(nextErrors).length > 0) {
       return

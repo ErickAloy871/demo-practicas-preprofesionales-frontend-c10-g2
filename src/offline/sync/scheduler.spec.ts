@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { ApiError } from '@/api/client'
 import { db } from '@/offline/db'
 import { pullChanges } from './pull'
 import { pushOutbox } from './push'
@@ -58,6 +59,17 @@ describe('syncNow', () => {
     mockedPull.mockRejectedValue(new Error('sin conexión'))
 
     await expect(syncNow()).resolves.toBeUndefined()
+    expect(getStatus().syncing).toBe(false)
+  })
+
+  it('no registra como fallo de sincronización un 401 de sesión expirada', async () => {
+    localStorage.setItem('access_token', 'tok')
+    mockedPull.mockRejectedValue(new ApiError(401, 'unauthorized'))
+    const errorSpy = vi.spyOn(console, 'error')
+
+    await syncNow()
+
+    expect(errorSpy).not.toHaveBeenCalled()
     expect(getStatus().syncing).toBe(false)
   })
 
