@@ -1,10 +1,35 @@
 import type { ReactNode } from 'react'
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { AuthProvider } from '@/auth/AuthContext'
 import { db } from '@/offline/db'
 import { HourLogsPage } from './HourLogsPage'
+import type { VirtualItem } from '@tanstack/react-virtual'
+
+// G2-27: HourLogsList usa virtualización; en JSDOM los elementos tienen altura
+// 0 y useVirtualizer no genera ítems. Mockeamos el hook para que devuelva los
+// primeros ítems como visibles y el test funcione igual que antes.
+vi.mock('@tanstack/react-virtual', () => ({
+  useVirtualizer: vi.fn((options: { count: number; estimateSize: () => number }) => {
+    const size = options.estimateSize()
+    const visibleCount = Math.min(options.count, 5)
+    const items: VirtualItem[] = Array.from({ length: visibleCount }, (_, i) => ({
+      index: i,
+      key: i,
+      start: i * size,
+      size,
+      end: i * size + size,
+      lane: 0,
+    }))
+    return {
+      getVirtualItems: () => items,
+      getTotalSize: () => options.count * size,
+      measureElement: () => undefined,
+    }
+  }),
+}))
+
 
 function withProviders({ children }: { children: ReactNode }) {
   return (
