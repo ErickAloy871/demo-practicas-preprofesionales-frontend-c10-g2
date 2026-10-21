@@ -96,8 +96,8 @@ export function AppLayout() {
     <div className="flex min-h-screen flex-col bg-paper md:h-screen md:overflow-hidden">
       <header className="flex h-topbar flex-none items-center gap-4 border-b-2 border-stamp bg-surface px-[18px] shadow-xs">
         <div className="flex flex-none items-center gap-2.5">
-          <span aria-hidden="true" className="flex size-[26px] items-center justify-center rounded-lg bg-stamp text-surface shadow-xs">
-            <span className="size-2 rounded-xs bg-surface" />
+          <span aria-hidden="true" className="flex size-[26px] items-center justify-center rounded-lg bg-stamp !text-white shadow-xs">
+            <span className="size-2 rounded-xs bg-white" />
           </span>
           <div className="flex flex-col leading-none">
             <span className="font-display text-17 font-bold tracking-[-0.02em] text-ink">
@@ -110,10 +110,10 @@ export function AppLayout() {
         </div>
 
         <div className="ml-auto flex items-center gap-3">
-          <div className="flex items-center gap-2.5 rounded-full border border-line/80 bg-well/40 py-1 pl-1 pr-3 shadow-xs">
+          <div className="flex items-center gap-2.5 rounded-full border border-line/80 bg-well/60 py-1 pl-1 pr-3 shadow-xs">
             <span
               aria-hidden="true"
-              className="flex size-7 flex-none items-center justify-center rounded-full bg-stamp text-12 font-semibold text-surface shadow-xs"
+              className="flex size-7 flex-none items-center justify-center rounded-full bg-stamp text-12 font-semibold !text-white shadow-xs"
             >
               {initialsOf(user?.fullName)}
             </span>
@@ -150,12 +150,12 @@ export function AppLayout() {
                           cn(
                             'flex h-9 items-center gap-2.5 rounded-lg px-3 text-14 transition-all',
                             isActive
-                              ? 'border border-line/60 bg-surface font-semibold text-stamp shadow-xs'
-                              : 'text-inkBody hover:bg-navHover hover:text-ink',
+                              ? 'bg-stamp !text-white font-semibold shadow-xs'
+                              : 'text-inkBody hover:bg-well/80 hover:text-ink font-medium',
                           )
                         }
                       >
-                        <Icon className="size-4 shrink-0 stroke-[1.75]" />
+                        <Icon className="size-4 shrink-0 stroke-[2]" />
                         <span>{item.label}</span>
                       </NavLink>
                     )

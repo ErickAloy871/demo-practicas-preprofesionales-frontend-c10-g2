@@ -9,8 +9,8 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-stamp text-surface shadow-xs hover:bg-stamp/90 hover:shadow-sm",
-        destructive: "bg-void text-surface shadow-xs hover:bg-void/90 hover:shadow-sm",
+        default: "bg-stamp !text-white shadow-xs hover:bg-stamp/90 hover:shadow-sm",
+        destructive: "bg-void !text-white shadow-xs hover:bg-void/90 hover:shadow-sm",
         outline:
           "border border-line bg-surface font-medium text-ink shadow-xs hover:border-stamp/60 hover:bg-well hover:shadow-sm",
         secondary: "bg-soft font-medium text-inkSoft hover:bg-badgeSoft hover:text-ink",

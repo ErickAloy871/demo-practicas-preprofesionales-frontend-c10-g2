@@ -88,9 +88,14 @@ export function MyStudentsPage() {
       <Panel
         toolbar={
           rows.length > 0 ? (
-            <span className="ml-auto font-data text-12 text-inkSoft">
-              {rows.length === 1 ? '1 practicante' : `${rows.length} practicantes`}
-            </span>
+            <div className="flex w-full items-center justify-between">
+              <span className="font-display text-14 font-semibold text-ink">
+                Estudiantes asignados
+              </span>
+              <span className="inline-flex items-center rounded-full border border-line bg-soft px-2.5 py-0.5 font-data text-12 text-inkBody shadow-xs">
+                {rows.length === 1 ? '1 practicante' : `${rows.length} practicantes`}
+              </span>
+            </div>
           ) : undefined
         }
       >

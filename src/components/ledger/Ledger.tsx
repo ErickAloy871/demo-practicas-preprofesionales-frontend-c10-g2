@@ -16,7 +16,7 @@ export function Ledger({ header, children, className }: LedgerProps) {
       )}
     >
       {header ? (
-        <div className="border-b border-paperRule bg-well/70 font-display text-12 font-medium text-inkSoft">
+        <div className="border-b border-line/80 bg-well/90 font-display text-12 font-semibold uppercase tracking-wider text-inkMid">
           {header}
         </div>
       ) : null}
@@ -28,8 +28,8 @@ export function Ledger({ header, children, className }: LedgerProps) {
 /** Fila de cabecera: mismo reparto de columnas que las filas de datos. */
 export function LedgerHeaderRow({ children }: { children: ReactNode }) {
   return (
-    <div className="hidden items-center gap-3 px-[18px] py-2.5 sm:flex">
-      <span aria-hidden="true" className="block w-1 flex-none" />
+    <div className="hidden items-center gap-3 px-[18px] py-3 sm:flex">
+      <span aria-hidden="true" className="block w-1.5 flex-none" />
       <div className="flex flex-1 items-center gap-3">{children}</div>
     </div>
   )
