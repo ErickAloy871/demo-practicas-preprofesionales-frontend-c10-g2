@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { ApiError } from '@/api/client'
 import { useAuth } from '@/auth/AuthContext'
 import { Button } from '@/components/ui/button'
+import { BrandLogo } from '@/components/BrandLogo'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
@@ -42,9 +43,9 @@ export function LoginPage() {
 
       <div className="relative z-10 w-full max-w-[420px]">
         <div className="mb-6 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <span aria-hidden="true" className="block size-[22px] rounded-md bg-stamp shadow-xs" />
-            <span className="font-display text-17 font-bold tracking-[-0.02em] text-ink">
+          <div className="flex items-center gap-3">
+            <BrandLogo size="md" />
+            <span className="font-display text-19 font-bold tracking-[-0.02em] text-ink">
               prácticas.
             </span>
           </div>

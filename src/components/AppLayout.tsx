@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 import { useAuth, type Role } from '@/auth/AuthContext'
 import { Button } from '@/components/ui/button'
+import { BrandLogo } from '@/components/BrandLogo'
 import { SyncIndicator } from '@/components/SyncIndicator'
 import { startSync } from '@/offline/sync/scheduler'
 import { cn } from '@/lib/utils'
@@ -96,9 +97,7 @@ export function AppLayout() {
     <div className="flex min-h-screen flex-col bg-paper md:h-screen md:overflow-hidden">
       <header className="flex h-topbar flex-none items-center gap-4 border-b-2 border-stamp bg-surface px-[18px] shadow-xs">
         <div className="flex flex-none items-center gap-2.5">
-          <span aria-hidden="true" className="flex size-[26px] items-center justify-center rounded-lg bg-stamp !text-white shadow-xs">
-            <span className="size-2 rounded-xs bg-white" />
-          </span>
+          <BrandLogo size="sm" />
           <div className="flex flex-col leading-none">
             <span className="font-display text-17 font-bold tracking-[-0.02em] text-ink">
               prácticas.
