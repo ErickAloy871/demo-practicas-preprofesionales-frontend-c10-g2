@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { AlertCircle, FolderKanban, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface PanelProps {
@@ -11,9 +12,14 @@ interface PanelProps {
 /** Contenedor blanco de esquinas grandes: la caja base de listados y tablas. */
 export function Panel({ toolbar, children, className }: PanelProps) {
   return (
-    <div className={cn('overflow-hidden rounded-2xl bg-surface', className)}>
+    <div
+      className={cn(
+        'overflow-hidden rounded-2xl border border-line/80 bg-surface shadow-[0_1px_3px_rgba(14,58,107,0.03)] transition-all',
+        className,
+      )}
+    >
       {toolbar ? (
-        <div className="flex flex-wrap items-center gap-2 border-b border-paperRule px-[18px] py-3.5">
+        <div className="flex flex-wrap items-center gap-2 border-b border-paperRule bg-well/40 px-[18px] py-3.5">
           {toolbar}
         </div>
       ) : null}
@@ -34,7 +40,7 @@ interface SectionProps {
 export function Section({ title, aside, children, className }: SectionProps) {
   return (
     <Panel className={className}>
-      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-b border-paperRule px-[18px] py-3.5">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-b border-paperRule bg-well/20 px-[18px] py-3.5">
         <h2 className="font-display text-15 font-semibold text-ink">{title}</h2>
         {aside}
       </div>
@@ -64,8 +70,14 @@ interface EmptyStateProps {
 export function EmptyState({ title, description, action }: EmptyStateProps) {
   return (
     <div className="flex flex-col items-center gap-1.5 px-5 py-14 text-center">
+      <div
+        aria-hidden="true"
+        className="mb-2 flex size-12 items-center justify-center rounded-2xl bg-chipStamp/50 text-stamp ring-8 ring-chipStamp/20"
+      >
+        <FolderKanban className="size-6 stroke-[1.75]" />
+      </div>
       <p className="font-display text-16 font-semibold text-ink">{title}</p>
-      {description ? <p className="text-14 text-inkMid">{description}</p> : null}
+      {description ? <p className="max-w-[420px] text-14 text-inkMid">{description}</p> : null}
       {action ? <div className="mt-3">{action}</div> : null}
     </div>
   )
@@ -74,14 +86,28 @@ export function EmptyState({ title, description, action }: EmptyStateProps) {
 /** Mensaje de error de carga, con el mismo aire que el estado vacío. */
 export function ErrorState({ children }: { children: ReactNode }) {
   return (
-    <p role="alert" className="px-5 py-14 text-center text-14 text-void">
-      {children}
-    </p>
+    <div
+      role="alert"
+      className="flex flex-col items-center justify-center gap-2 px-5 py-14 text-center text-14 text-void"
+    >
+      <div
+        aria-hidden="true"
+        className="flex size-10 items-center justify-center rounded-full bg-chipVoid text-void ring-4 ring-chipVoid/30"
+      >
+        <AlertCircle className="size-5" />
+      </div>
+      <p>{children}</p>
+    </div>
   )
 }
 
 export function LoadingState({ children }: { children: ReactNode }) {
-  return <p className="px-5 py-14 text-center text-14 text-inkSoft">{children}</p>
+  return (
+    <div className="flex flex-col items-center justify-center gap-2.5 px-5 py-14 text-center">
+      <Loader2 className="size-5 animate-spin text-stamp" />
+      <p className="text-14 text-inkSoft">{children}</p>
+    </div>
+  )
 }
 
 interface AsyncSectionProps<T> {

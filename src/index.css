@@ -48,7 +48,7 @@
   }
 
   body {
-    @apply bg-paper text-ink antialiased;
+    @apply bg-paper text-ink antialiased selection:bg-chipStamp selection:text-stamp;
     font-family: 'IBM Plex Sans Variable', system-ui, sans-serif;
   }
 
@@ -66,6 +66,30 @@
 
   :focus-visible {
     @apply outline-2 outline-offset-2 outline-[hsl(var(--stamp))];
+  }
+
+  /* Barras de desplazamiento sutiles y elegantes */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--line)) transparent;
+  }
+
+  *::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background: hsl(var(--line));
+    border-radius: 9999px;
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--inkMute));
   }
 
   @media (prefers-reduced-motion: reduce) {

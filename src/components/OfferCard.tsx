@@ -25,7 +25,7 @@ export function OfferCard({
   actions,
 }: OfferCardProps) {
   return (
-    <article className="flex flex-col gap-3 rounded-xl bg-surface px-5 py-[18px]">
+    <article className="flex flex-col gap-3 rounded-2xl border border-line/80 bg-surface px-5 py-[18px] shadow-[0_1px_3px_rgba(14,58,107,0.03)] transition-all duration-200 hover:border-stamp/30 hover:shadow-md">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h3 className="font-display text-16 font-bold leading-snug text-ink">{title}</h3>

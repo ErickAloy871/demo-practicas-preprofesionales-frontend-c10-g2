@@ -13,14 +13,18 @@ export function LedgerRow({ syncState, children, className, note }: LedgerRowPro
   return (
     <div
       className={cn(
-        'flex min-h-row items-stretch gap-3 px-[18px] py-2.5 transition-colors hover:bg-well',
+        'flex min-h-row items-stretch gap-3 px-[18px] py-2.5 transition-colors hover:bg-well/70',
         className,
       )}
     >
       <SyncGutter state={syncState} />
       <div className="flex flex-1 flex-col justify-center gap-1">
         <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">{children}</div>
-        {syncState === 'failed' && note ? <p className="text-12 text-void">{note}</p> : null}
+        {syncState === 'failed' && note ? (
+          <p className="rounded-md border border-dotVoid/20 bg-chipVoid/60 px-2.5 py-1 text-12 font-medium text-void">
+            {note}
+          </p>
+        ) : null}
       </div>
     </div>
   )

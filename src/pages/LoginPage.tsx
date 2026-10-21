@@ -33,16 +33,27 @@ export function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-paper px-4 py-10">
-      <div className="w-full max-w-[420px]">
-        <div className="mb-6 flex items-center gap-2.5">
-          <span aria-hidden="true" className="block size-[22px] rounded-md bg-stamp" />
-          <span className="font-display text-17 font-bold tracking-[-0.02em] text-ink">
-            prácticas.
+    <div className="relative flex min-h-screen items-center justify-center bg-paper px-4 py-10 selection:bg-chipStamp selection:text-stamp">
+      {/* Acentos decorativos de fondo acordes a los colores institucionales */}
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -top-[20%] left-1/2 size-[600px] -translate-x-1/2 rounded-full bg-hero/40 blur-3xl" />
+        <div className="absolute -bottom-[15%] right-[10%] size-[360px] rounded-full bg-chipStamp/30 blur-3xl" />
+      </div>
+
+      <div className="relative z-10 w-full max-w-[420px]">
+        <div className="mb-6 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <span aria-hidden="true" className="block size-[22px] rounded-md bg-stamp shadow-xs" />
+            <span className="font-display text-17 font-bold tracking-[-0.02em] text-ink">
+              prácticas.
+            </span>
+          </div>
+          <span className="rounded-full border border-line bg-surface/80 px-2.5 py-0.5 text-11 font-medium text-inkSoft backdrop-blur-xs">
+            Portal institucional
           </span>
         </div>
 
-        <div className="rounded-2xl bg-surface px-7 py-7">
+        <div className="rounded-2xl border border-line/80 bg-surface px-7 py-7 shadow-[0_4px_24px_-4px_rgba(14,58,107,0.08)]">
           <h1 className="font-display text-26 font-bold tracking-[-0.02em] text-ink">
             Entrá a tu cuenta
           </h1>
@@ -76,7 +87,10 @@ export function LoginPage() {
               />
             </div>
             {error ? (
-              <p role="alert" className="rounded-md bg-chipVoid px-3 py-2.5 text-13 text-void">
+              <p
+                role="alert"
+                className="rounded-lg border border-dotVoid/20 bg-chipVoid px-3 py-2.5 text-13 text-void shadow-xs"
+              >
                 {error}
               </p>
             ) : null}

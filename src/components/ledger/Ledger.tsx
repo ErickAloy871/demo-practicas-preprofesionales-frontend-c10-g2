@@ -9,9 +9,16 @@ interface LedgerProps {
 
 export function Ledger({ header, children, className }: LedgerProps) {
   return (
-    <div className={cn('divide-y divide-paperRule', className)}>
+    <div
+      className={cn(
+        'divide-y divide-paperRule overflow-hidden rounded-2xl border border-line/80 bg-surface shadow-[0_1px_3px_rgba(14,58,107,0.03)]',
+        className,
+      )}
+    >
       {header ? (
-        <div className="bg-well font-display text-12 text-inkSoft">{header}</div>
+        <div className="border-b border-paperRule bg-well/70 font-display text-12 font-medium text-inkSoft">
+          {header}
+        </div>
       ) : null}
       {children}
     </div>

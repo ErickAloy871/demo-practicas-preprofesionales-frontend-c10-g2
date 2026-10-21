@@ -215,7 +215,7 @@ export function HourLogForm({ placementId, onSaved }: HourLogFormProps) {
           className="font-data"
         />
         {confirmationLabel ? (
-          <p className="font-data text-12 text-inkSoft">{confirmationLabel}</p>
+          <p className="font-data text-12 font-medium text-inkSoft">📅 {confirmationLabel}</p>
         ) : null}
         {errors.date ? (
           <p id="hourlog-date-error" role="alert" className="text-12 text-void">
@@ -263,7 +263,11 @@ export function HourLogForm({ placementId, onSaved }: HourLogFormProps) {
       </div>
 
       {durationLabel ? (
-        <p className="-mt-2 font-data text-12 text-inkSoft">{durationLabel}</p>
+        <div className="-mt-1">
+          <span className="inline-block rounded-md border border-stamp/15 bg-chipStamp/50 px-2.5 py-0.5 font-data text-12 font-medium text-stamp">
+            {durationLabel}
+          </span>
+        </div>
       ) : null}
 
       <div className="flex flex-col gap-1.5">
@@ -280,7 +284,9 @@ export function HourLogForm({ placementId, onSaved }: HourLogFormProps) {
           className="font-data tabular-nums"
         />
         {liveHoursWarning && !errors.hours ? (
-          <p className="text-12 text-pending">{liveHoursWarning}</p>
+          <p className="rounded-md border border-dotPending/25 bg-chipPending px-2.5 py-1 text-12 text-pending">
+            {liveHoursWarning}
+          </p>
         ) : null}
         {errors.hours ? (
           <p id="hourlog-hours-error" role="alert" className="text-12 text-void">
@@ -308,16 +314,17 @@ export function HourLogForm({ placementId, onSaved }: HourLogFormProps) {
       </div>
 
       {submitError ? (
-        <p role="alert" className="text-14 text-void">
+        <p role="alert" className="rounded-md border border-dotVoid/20 bg-chipVoid px-3 py-2 text-14 text-void">
           {submitError}
         </p>
       ) : null}
 
-      <p className="text-12 text-inkSoft">
-        Se guarda en este dispositivo aunque no tengas conexión. Se sincroniza solo cuando vuelvas a estar en línea
-      </p>
+      <div className="flex items-center gap-2 rounded-lg border border-line/70 bg-well/60 px-3 py-2 text-12 text-inkSoft">
+        <span className="text-stamp">ℹ</span>
+        <span>Se guarda en este dispositivo aunque no tengas conexión. Se sincroniza solo cuando vuelvas a estar en línea</span>
+      </div>
 
-      <Button type="submit" disabled={submitting}>
+      <Button type="submit" size="lg" disabled={submitting}>
         {submitting ? 'Guardando…' : 'Guardar horas'}
       </Button>
     </form>
