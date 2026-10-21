@@ -41,14 +41,8 @@ entero para saber qué más se puede romper. Debería partirse en un hook de for
 helpers puros que ya casi están separados (`formatDateForConfirmation`,
 `computeDurationLabel`) y un hook de persistencia aparte. No llegamos.
 
-## D-10 · Los hooks que tocan Dexie no tienen tests
+## D-10 · Resuelto: tests de los hooks que leen de la base local (Dexie / IndexedDB)
 
-`src/offline/hooks/`: `useHourLogs.ts`, `usePlacement.ts`, `useSyncStatus.ts`. La
-excepción es `useOnline.ts`, que sí tiene spec.
+`src/offline/hooks/`: `useHourLogs.spec.ts`, `usePlacement.spec.tsx`, `useSyncStatus.spec.ts`, junto con `useOnline.spec.ts`.
 
-No supimos testear hooks que tocan IndexedDB y lo dejamos así. Todos usan `useLiveQuery` de
-`dexie-react-hooks` contra la base real de Dexie; en otras partes del repo probamos con
-`fake-indexeddb` (mira `offline/db.spec.ts` como referencia) y no debería ser muy distinto
-hacerlo acá, pero nunca nos sentamos a escribirlos. Si vas a tocar cómo se leen las horas o
-la plaza del estudiante desde la UI, vas a ciegas. No hay red de seguridad que te avise si
-rompiste algo.
+Se añadieron pruebas automatizadas con `fake-indexeddb` ejercitando lecturas reales contra Dexie sin falsear los hooks. Las pruebas cubren el estado de carga inicial (`undefined`), datos presentes y colección vacía (`[]` o `null`), además de reactividad en tiempo real y aislamiento completo entre casos (`await db.delete()`, `await db.open()`), alcanzando el 100% de cobertura en la carpeta.
