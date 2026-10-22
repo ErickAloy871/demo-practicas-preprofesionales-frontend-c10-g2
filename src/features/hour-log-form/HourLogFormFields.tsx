@@ -1,5 +1,6 @@
 import type { HourLogErrors, HourLogFields } from './state'
 import { HourLogField } from './HourLogField'
+import { AiHourAssistant } from '@/components/ai/AiHourAssistant'
 
 interface HourLogFormFieldsProps {
   fields: HourLogFields
@@ -39,6 +40,10 @@ export function HourLogFormFields({
       <HourLogField
         id="hourlog-activity" label="Actividad" multiline value={fields.activity}
         onChange={(value) => change('activity', value)} error={errors.activity}
+      />
+      <AiHourAssistant
+        currentActivity={fields.activity}
+        onSelectSuggestion={(suggestion) => change('activity', suggestion)}
       />
     </>
   )
