@@ -33,15 +33,17 @@ export function SyncIndicator() {
     <div
       role="status"
       aria-live="polite"
-      className="flex-none rounded-lg bg-surface px-3.5 py-3"
+      className="flex-none rounded-xl border border-line/80 bg-surface px-3.5 py-3 shadow-[0_1px_3px_rgba(14,58,107,0.03)]"
     >
       <div className="flex items-center gap-2">
         {/* Relleno además de color: sólido en línea, hueco sin conexión. */}
         <span
           aria-hidden="true"
           className={cn(
-            'inline-block size-2.5 flex-none rounded-full border',
-            online ? 'border-stamp bg-stamp' : 'border-2 border-void bg-transparent',
+            'inline-block size-2.5 flex-none rounded-full border transition-all',
+            online
+              ? 'border-stamp bg-stamp ring-2 ring-stamp/20'
+              : 'border-2 border-void bg-transparent ring-2 ring-void/20',
           )}
         />
         <span className={cn('text-13 font-semibold', online ? 'text-ink' : 'text-void')}>

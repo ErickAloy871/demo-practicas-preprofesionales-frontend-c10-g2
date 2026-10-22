@@ -5,15 +5,15 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded font-display font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:pointer-events-none disabled:bg-soft disabled:text-inkSoft [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg font-display font-semibold transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:pointer-events-none disabled:bg-soft disabled:text-inkSoft active:scale-[0.98] [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
-        default: "bg-stamp text-surface hover:bg-stamp/90",
-        destructive: "bg-void text-surface hover:bg-void/90",
+        default: "bg-stamp !text-white shadow-xs hover:bg-stamp/90 hover:shadow-sm",
+        destructive: "bg-void !text-white shadow-xs hover:bg-void/90 hover:shadow-sm",
         outline:
-          "border border-line bg-surface font-medium text-ink hover:border-stamp",
-        secondary: "bg-soft font-medium text-inkSoft hover:bg-badgeSoft",
+          "border border-line bg-surface font-medium text-ink shadow-xs hover:border-stamp/60 hover:bg-well hover:shadow-sm",
+        secondary: "bg-soft font-medium text-inkSoft hover:bg-badgeSoft hover:text-ink",
         ghost: "font-medium text-inkBody hover:bg-pillHover hover:text-ink",
         link: "font-medium text-stamp underline-offset-4 hover:underline",
       },
