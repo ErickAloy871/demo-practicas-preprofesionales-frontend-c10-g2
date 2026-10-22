@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { db, type LocalHourLog } from '@/offline/db'
 import { enqueue } from '@/offline/sync/push'
 import { sumHoursForDate, validateHourLogValues } from '@/lib/hour-log-validation'
+import { AiHourAssistant } from '@/components/ai/AiHourAssistant'
 
 interface HourLogFormProps {
   placementId: number
@@ -305,6 +306,15 @@ export function HourLogForm({ placementId, onSaved }: HourLogFormProps) {
           aria-describedby={errors.activity ? 'hourlog-activity-error' : undefined}
           rows={3}
           placeholder="Qué hiciste durante este bloque de horas"
+        />
+        <AiHourAssistant
+          currentActivity={activity}
+          onSelectSuggestion={(suggestion) => {
+            setActivity(suggestion)
+            if (errors.activity) {
+              setErrors((prev) => ({ ...prev, activity: undefined }))
+            }
+          }}
         />
         {errors.activity ? (
           <p id="hourlog-activity-error" role="alert" className="text-12 text-void">
