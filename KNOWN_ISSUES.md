@@ -29,17 +29,20 @@ la vas a notar mirando la pantalla, pero si escribes un test que aserte sobre el
 los estados del indicador, la vas a agarrar. No nos alcanzó a arreglar. Hay que juntar
 ambos `setStatus` en uno solo, o calcular `pending` antes de marcar `syncing: false`.
 
-## D-09 · `HourLogForm.tsx` hace de todo
+## D-09 · Resuelto: formulario de horas separado (G2-26)
 
-`src/components/HourLogForm.tsx`, 348 líneas.
+`src/components/HourLogForm.tsx` presenta los campos y comunica eventos. La lógica vive
+en `src/features/hour-log-form/`: `state.ts` contiene las transiciones y la validación
+del formulario, `format.ts` los textos de fecha y duración, `operation.ts` construye el
+registro y la operación, y `submit.ts` coordina el envío. Estas funciones se prueban sin
+montar React y reutilizan la regla unificada de D-06, sin copiar sus límites.
 
-Estado del formulario, las dos copias de la validación de horas (ver D-06), formateo de la
-fecha en español para la confirmación, cálculo de la duración a partir de inicio y fin, la
-escritura a `db.hourLogs` y el `enqueue()` al outbox, todo en el mismo componente.
-Funciona, pero cualquier cambio, hasta uno chico como agregar un campo, obliga a leerlo
-entero para saber qué más se puede romper. Debería partirse en un hook de formulario, los
-helpers puros que ya casi están separados (`formatDateForConfirmation`,
-`computeDurationLabel`) y un hook de persistencia aparte. No llegamos.
+`useHourLogForm.ts` conecta esa lógica con React y con la lectura reactiva de Dexie.
+`storage.ts` conserva la transacción atómica de registro y outbox para guardar sin red.
+Los campos visuales se separan en `HourLogFormFields.tsx` y `HourLogField.tsx`.
+Todos los archivos extraídos, incluidos sus tests, tienen como máximo 150 líneas.
+Las pruebas de integración comprueban el registro desde el formulario sin conexión,
+la persistencia al reabrir IndexedDB y la reversión si falla el encolado.
 
 ## D-10 · Resuelto: tests de los hooks que leen de la base local (Dexie / IndexedDB)
 
