@@ -323,9 +323,14 @@ export function ReviewHoursPage() {
 
       <Panel
         toolbar={
-          <span className="ml-auto font-data text-12 text-inkSoft">
-            {plural(pendingCount, 'registro', 'registros')} sin revisar
-          </span>
+          <div className="flex w-full flex-wrap items-center justify-between gap-2">
+            <span className="font-display text-14 font-semibold text-ink">
+              Bitácora de actividades
+            </span>
+            <span className="inline-flex items-center rounded-full border border-dotPending/25 bg-chipPending px-2.5 py-0.5 font-data text-12 font-semibold text-pending shadow-xs">
+              {plural(pendingCount, 'registro', 'registros')} sin revisar
+            </span>
+          </div>
         }
       >
         <ReviewList

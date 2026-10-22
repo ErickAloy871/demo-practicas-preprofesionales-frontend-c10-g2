@@ -11,11 +11,11 @@ interface HoursProgressPanelProps {
 /** Panel de avance de horas: contador arriba, barra de dos tramos abajo. */
 export function HoursProgressPanel({ hours, note }: HoursProgressPanelProps) {
   return (
-    <section className="rounded-2xl bg-surface px-[18px] py-4">
+    <section className="rounded-2xl border border-line/80 bg-surface px-[18px] py-4 shadow-[0_1px_3px_rgba(14,58,107,0.03)]">
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
         <h2 className="font-display text-15 font-semibold text-ink">Progreso de horas</h2>
         <p className="font-data text-13 text-inkSoft">
-          {hours.approvedHours.toFixed(1)} / {hours.requiredHours} aprobadas
+          <span className="font-semibold text-stamp">{hours.approvedHours.toFixed(1)}</span> / {hours.requiredHours} aprobadas
           {note}
         </p>
       </div>
