@@ -35,12 +35,26 @@ function DataRow({ label, children }: { label: string; children: React.ReactNode
   )
 }
 
+const REQUIRED_KINDS = ['AGREEMENT', 'INSURANCE'] as const
+
+function getMissingRequired(documents: LocalDocument[] | undefined): string[] {
+  if (documents === undefined) return []
+  return REQUIRED_KINDS.filter((kind) => {
+    const doc = documents
+      .filter((d) => d.kind === kind)
+      .sort((a, b) => (a.updatedAt < b.updatedAt ? 1 : -1))[0]
+    return !doc || doc.status === 'REJECTED'
+  }).map((k) => (k === 'AGREEMENT' ? 'Convenio' : 'Seguro'))
+}
+
 function PlacementHero({
   hours,
   pendingDocuments,
+  missingRequired,
 }: {
   hours: HoursSummary
   pendingDocuments: number
+  missingRequired: string[]
 }) {
   const remaining = Math.max(0, hours.requiredHours - hours.approvedHours)
 
@@ -54,7 +68,9 @@ function PlacementHero({
             {hours.submittedHours.toFixed(1)} h esperando a tu tutor
           </HeroCard>
           <HeroCard label="Documentos">
-            {plural(pendingDocuments, 'documento pendiente', 'documentos pendientes')}
+            {missingRequired.length > 0
+              ? `${missingRequired.length} obligatorios por subir`
+              : plural(pendingDocuments, 'documento en revisión', 'documentos en revisión')}
           </HeroCard>
         </>
       }
@@ -77,10 +93,12 @@ function PlacementHero({
 function PlacementStats({
   hours,
   pendingDocuments,
+  missingRequired,
   logCount,
 }: {
   hours: HoursSummary
   pendingDocuments: number
+  missingRequired: string[]
   logCount: number
 }) {
   return (
@@ -96,12 +114,21 @@ function PlacementStats({
         note="con tu tutor"
         noteTone="pending"
       />
-      <StatCard
-        label="Documentos pendientes"
-        value={String(pendingDocuments)}
-        note="por validar"
-        noteTone={pendingDocuments > 0 ? 'pending' : 'neutral'}
-      />
+      {missingRequired.length > 0 ? (
+        <StatCard
+          label="Documentos obligatorios"
+          value={`${missingRequired.length} por subir`}
+          note={missingRequired.join(' y ')}
+          noteTone="void"
+        />
+      ) : (
+        <StatCard
+          label="Documentos pendientes"
+          value={String(pendingDocuments)}
+          note={pendingDocuments > 0 ? 'por validar' : 'al día'}
+          noteTone={pendingDocuments > 0 ? 'pending' : 'stamp'}
+        />
+      )}
       <StatCard label="Registros" value={String(logCount)} note="en el libro" />
     </StatGrid>
   )
@@ -116,26 +143,44 @@ function PendingDocuments({ documents }: { documents: LocalDocument[] | undefine
 
   if (documents === undefined) {
     return (
-      <Section title="Documentos pendientes" aside={aside}>
+      <Section title="Documentos de la práctica" aside={aside}>
         <LoadingState>Cargando documentos…</LoadingState>
       </Section>
     )
   }
 
+  const missingRequired = getMissingRequired(documents)
   const pending = documents.filter((doc) => doc.status === 'PENDING')
+
+  if (missingRequired.length > 0 && pending.length === 0) {
+    return (
+      <Section title="Documentos de la práctica" aside={aside}>
+        <EmptyState
+          title="Faltan documentos obligatorios por subir"
+          description={`Tienes pendiente subir: ${missingRequired.join(' y ')}. Son necesarios para tu práctica.`}
+          action={
+            <Button asChild size="sm">
+              <Link to="/documentos">Subir documentos ahora</Link>
+            </Button>
+          }
+        />
+      </Section>
+    )
+  }
+
   if (pending.length === 0) {
     return (
-      <Section title="Documentos pendientes" aside={aside}>
+      <Section title="Documentos de la práctica" aside={aside}>
         <EmptyState
-          title="No tienes documentos pendientes"
-          description="Todo lo que subiste ya fue revisado."
+          title="Documentos al día"
+          description="Todos tus documentos requeridos fueron entregados."
         />
       </Section>
     )
   }
 
   return (
-    <Section title="Documentos pendientes" aside={aside}>
+    <Section title="Documentos de la práctica" aside={aside}>
       <div className="divide-y divide-paperRule">
         {pending.map((doc, index) => (
           <div
@@ -223,6 +268,7 @@ export function MyPlacementPage() {
     )
   }
 
+  const missingRequired = getMissingRequired(documents)
   const pendingDocuments = documents?.filter((doc) => doc.status === 'PENDING').length ?? 0
   const hours = summarizeHours(logs, placement.requiredHours)
 
@@ -238,11 +284,16 @@ export function MyPlacementPage() {
         }
       />
 
-      <PlacementHero hours={hours} pendingDocuments={pendingDocuments} />
+      <PlacementHero
+        hours={hours}
+        pendingDocuments={pendingDocuments}
+        missingRequired={missingRequired}
+      />
 
       <PlacementStats
         hours={hours}
         pendingDocuments={pendingDocuments}
+        missingRequired={missingRequired}
         logCount={logs?.length ?? 0}
       />
 
