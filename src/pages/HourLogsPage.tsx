@@ -1,9 +1,12 @@
 import { useMemo, useState } from 'react'
+import { FilterTabs } from '@/components/FilterTabs'
 import { HourLogForm } from '@/components/HourLogForm'
 import { HoursProgressPanel } from '@/components/HoursProgressPanel'
 import { PageHeader } from '@/components/PageHeader'
+import { Pagination } from '@/components/Pagination'
 import { LoadingState, Panel } from '@/components/Panel'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import {
   Dialog,
   DialogBody,
@@ -14,7 +17,13 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { HourLogsList } from '@/components/ledger/HourLogsList'
+import {
+  HOUR_LOG_STATUS_OPTIONS,
+  type HourLogStatusFilter,
+  filterHourLogs,
+} from '@/lib/hourLogFilters'
 import { type HoursSummary, summarizeHours } from '@/lib/hours'
+import { usePagedList } from '@/lib/usePagedList'
 import { plural } from '@/lib/utils'
 import { EmptyState } from '@/components/Panel'
 import { useHourLogs } from '@/offline/hooks/useHourLogs'
@@ -63,6 +72,14 @@ export function HourLogsPage() {
     [logs, placement?.requiredHours],
   )
 
+  const [status, setStatus] = useState<HourLogStatusFilter>('ALL')
+  const [query, setQuery] = useState('')
+  const visibleLogs = useMemo(
+    () => filterHourLogs([...(logs ?? [])].reverse(), status, query),
+    [logs, status, query],
+  )
+  const paged = usePagedList(visibleLogs, `${status}|${query}`)
+
   if (placement === undefined) {
     return <LoadingState>Cargando tu práctica…</LoadingState>
   }
@@ -102,7 +119,44 @@ export function HourLogsPage() {
           </div>
         }
       >
-        <HourLogsList logs={logs} />
+        <div className="flex flex-wrap items-center gap-2 border-b border-paperRule px-[18px] py-3">
+          <FilterTabs
+            label="Filtrar por estado"
+            options={HOUR_LOG_STATUS_OPTIONS}
+            value={status}
+            onChange={(value) => setStatus(value as HourLogStatusFilter)}
+          />
+          <Input
+            type="search"
+            aria-label="Buscar registros"
+            placeholder="Buscar por actividad o fecha"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            className="sm:ml-auto sm:max-w-xs"
+          />
+        </div>
+
+        {logs.length > 0 && visibleLogs.length === 0 ? (
+          <EmptyState
+            title="Ningún registro coincide con los filtros"
+            description="Prueba con otro estado o con otro texto de búsqueda."
+          />
+        ) : (
+          <HourLogsList logs={paged.items} />
+        )}
+
+        {paged.total > 0 ? (
+          <Pagination
+            page={paged.page}
+            totalPages={paged.totalPages}
+            total={paged.total}
+            from={paged.from}
+            to={paged.to}
+            pageSize={paged.pageSize}
+            onPageChange={paged.setPage}
+            onPageSizeChange={paged.setPageSize}
+          />
+        ) : null}
       </Panel>
     </>
   )

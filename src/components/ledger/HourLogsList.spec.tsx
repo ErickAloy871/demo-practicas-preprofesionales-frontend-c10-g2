@@ -139,6 +139,19 @@ describe('HourLogsList', () => {
     ).toBeInTheDocument()
   })
 
+  it('respeta el orden recibido sin invertirlo', () => {
+    const logs = [
+      { ...BASE_LOG, id: 1, date: '2026-04-09', activity: 'Más reciente', status: 'APPROVED' as const, syncState: 'synced' as const },
+      { ...BASE_LOG, id: 2, date: '2026-04-01', activity: 'Más antigua', status: 'APPROVED' as const, syncState: 'synced' as const },
+    ]
+
+    render(<HourLogsList logs={logs} />)
+
+    const activities = screen.getAllByText(/^Más (reciente|antigua)$/)
+    expect(activities[0]).toHaveTextContent('Más reciente')
+    expect(activities[1]).toHaveTextContent('Más antigua')
+  })
+
   it('no muestra nota cuando syncState no es failed', () => {
     const logs = [
       {
