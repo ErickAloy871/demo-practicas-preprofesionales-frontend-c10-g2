@@ -7,6 +7,7 @@ import { HoursProgressPanel } from '@/components/HoursProgressPanel'
 import { PageHeader } from '@/components/PageHeader'
 import { Pagination } from '@/components/Pagination'
 import { EmptyState, LoadingState, Panel } from '@/components/Panel'
+import { TutorAiSummaryCard } from '@/components/ai/TutorAiSummaryCard'
 import { StatusBadge } from '@/components/StatusBadge'
 import { Button } from '@/components/ui/button'
 import {
@@ -309,6 +310,8 @@ export function ReviewHoursPage() {
       />
 
       <HoursProgressPanel hours={hours} note={pendingNote(pendingCount)} />
+
+      <TutorAiSummaryCard logs={logs} />
 
       {reviewError ? (
         <p role="alert" className="rounded-lg bg-chipVoid px-4 py-3 text-13 text-void">
