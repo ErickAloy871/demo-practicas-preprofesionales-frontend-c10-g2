@@ -1,7 +1,9 @@
 import { useMemo, useState } from 'react'
+import { HourLogFilters } from '@/components/HourLogFilters'
 import { HourLogForm } from '@/components/HourLogForm'
 import { HoursProgressPanel } from '@/components/HoursProgressPanel'
 import { PageHeader } from '@/components/PageHeader'
+import { Pagination } from '@/components/Pagination'
 import { LoadingState, Panel } from '@/components/Panel'
 import { Button } from '@/components/ui/button'
 import {
@@ -15,6 +17,7 @@ import {
 } from '@/components/ui/dialog'
 import { HourLogsList } from '@/components/ledger/HourLogsList'
 import { type HoursSummary, summarizeHours } from '@/lib/hours'
+import { useHourLogView } from '@/lib/useHourLogView'
 import { plural } from '@/lib/utils'
 import { EmptyState } from '@/components/Panel'
 import { useHourLogs } from '@/offline/hooks/useHourLogs'
@@ -63,6 +66,8 @@ export function HourLogsPage() {
     [logs, placement?.requiredHours],
   )
 
+  const { status, setStatus, query, setQuery, visibleLogs, paged } = useHourLogView(logs)
+
   if (placement === undefined) {
     return <LoadingState>Cargando tu práctica…</LoadingState>
   }
@@ -102,7 +107,18 @@ export function HourLogsPage() {
           </div>
         }
       >
-        <HourLogsList logs={logs} />
+        <HourLogFilters status={status} onStatusChange={setStatus} query={query} onQueryChange={setQuery} />
+
+        {logs.length > 0 && visibleLogs.length === 0 ? (
+          <EmptyState
+            title="Ningún registro coincide con los filtros"
+            description="Prueba con otro estado o con otro texto de búsqueda."
+          />
+        ) : (
+          <HourLogsList logs={paged.items} />
+        )}
+
+        <Pagination paged={paged} />
       </Panel>
     </>
   )
