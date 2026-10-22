@@ -22,12 +22,12 @@ export function BrandLogo({ className, size = 'sm' }: BrandLogoProps) {
     >
       <defs>
         <linearGradient id="brandBg" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="#184A80" />
-          <stop offset="100%" stop-color="#0A2A4E" />
+          <stop offset="0%" stopColor="#184A80" />
+          <stop offset="100%" stopColor="#0A2A4E" />
         </linearGradient>
         <linearGradient id="brandGold" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="#FBBF24" />
-          <stop offset="100%" stop-color="#D97706" />
+          <stop offset="0%" stopColor="#FBBF24" />
+          <stop offset="100%" stopColor="#D97706" />
         </linearGradient>
       </defs>
       {/* Base redondeada institucional */}
