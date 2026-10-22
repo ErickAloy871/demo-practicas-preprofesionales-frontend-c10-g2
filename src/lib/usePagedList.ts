@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { DEFAULT_PAGE_SIZE, type Page, paginate } from '@/lib/pagination'
 
-interface PagedList<T> extends Page<T> {
+export interface PagedList<T> extends Page<T> {
   pageSize: number
   setPage: (page: number) => void
   setPageSize: (pageSize: number) => void
