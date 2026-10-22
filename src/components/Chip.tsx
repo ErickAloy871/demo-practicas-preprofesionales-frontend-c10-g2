@@ -8,10 +8,10 @@ import { cn } from '@/lib/utils'
 export type ChipTone = 'stamp' | 'pending' | 'void' | 'neutral'
 
 const TONE_CLASSES: Record<ChipTone, string> = {
-  stamp: 'bg-chipStamp text-stamp',
-  pending: 'bg-chipPending text-pending',
-  void: 'bg-chipVoid text-void',
-  neutral: 'bg-soft text-inkSoft',
+  stamp: 'bg-chipStamp text-stamp border border-stamp/20 shadow-[0_1px_2px_rgba(14,58,107,0.06)]',
+  pending: 'bg-chipPending text-pending border border-dotPending/25 shadow-[0_1px_2px_rgba(107,65,9,0.05)]',
+  void: 'bg-chipVoid text-void border border-dotVoid/25 shadow-[0_1px_2px_rgba(142,31,23,0.05)]',
+  neutral: 'bg-soft text-inkSoft border border-line',
 }
 
 // El punto lleva su propio color: en los tonos claros el texto no tiene
@@ -53,7 +53,7 @@ export function Tag({ children, className }: { children: React.ReactNode; classN
   return (
     <span
       className={cn(
-        'inline-flex h-6 items-center whitespace-nowrap rounded-full bg-soft px-2.5 text-12 text-inkBody',
+        'inline-flex h-6 items-center whitespace-nowrap rounded-full bg-soft border border-line/60 px-2.5 text-12 text-inkBody',
         className,
       )}
     >

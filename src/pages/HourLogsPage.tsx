@@ -92,9 +92,14 @@ export function HourLogsPage() {
 
       <Panel
         toolbar={
-          <span className="ml-auto font-data text-12 text-inkSoft">
-            {plural(logs.length, 'registro', 'registros')}
-          </span>
+          <div className="flex w-full items-center justify-between">
+            <span className="font-display text-14 font-semibold text-ink">
+              Entradas del libro
+            </span>
+            <span className="inline-flex items-center rounded-full border border-line bg-soft px-2.5 py-0.5 font-data text-12 text-inkBody shadow-xs">
+              {plural(logs.length, 'registro', 'registros')}
+            </span>
+          </div>
         }
       >
         <HourLogsList logs={logs} />

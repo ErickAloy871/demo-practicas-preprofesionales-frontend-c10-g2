@@ -30,7 +30,7 @@ export function FilterTabs({
       role="group"
       aria-label={label}
       className={cn(
-        'inline-flex flex-wrap gap-0.5 rounded-lg p-0.5',
+        'inline-flex flex-wrap gap-0.5 rounded-lg border border-line/75 p-0.5 shadow-xs',
         surface === 'surface' ? 'bg-surface' : 'bg-soft',
         className,
       )}
@@ -44,9 +44,9 @@ export function FilterTabs({
             aria-pressed={active}
             onClick={() => onChange(option.value)}
             className={cn(
-              'inline-flex h-[30px] items-center rounded-md px-3 text-13 transition-colors',
+              'inline-flex h-[30px] items-center rounded-md px-3 text-13 transition-all',
               active
-                ? 'bg-stamp font-semibold text-surface'
+                ? 'bg-stamp font-semibold !text-white shadow-xs'
                 : 'text-inkMid hover:bg-pillHover hover:text-ink',
             )}
           >
