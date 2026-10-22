@@ -2,9 +2,12 @@ import { type FormEvent, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Link, useParams } from 'react-router-dom'
 import { ApiError, api } from '@/api/client'
+import { HourLogFilters } from '@/components/HourLogFilters'
 import { HoursProgressPanel } from '@/components/HoursProgressPanel'
 import { PageHeader } from '@/components/PageHeader'
+import { Pagination } from '@/components/Pagination'
 import { EmptyState, LoadingState, Panel } from '@/components/Panel'
+import { TutorAiSummaryCard } from '@/components/ai/TutorAiSummaryCard'
 import { StatusBadge } from '@/components/StatusBadge'
 import { Button } from '@/components/ui/button'
 import {
@@ -20,8 +23,9 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Ledger, LedgerHeaderRow } from '@/components/ledger/Ledger'
 import { LedgerRow } from '@/components/ledger/LedgerRow'
-import { parseLocalDate } from '@/lib/date'
+import { formatDate } from '@/lib/date'
 import { summarizeHours } from '@/lib/hours'
+import { useHourLogView } from '@/lib/useHourLogView'
 import { plural } from '@/lib/utils'
 import { db, type LocalHourLog, type LocalPlacement } from '@/offline/db'
 import { syncNow } from '@/offline/sync/scheduler'
@@ -35,12 +39,6 @@ const COMMON_REASONS = [
   'Falta detalle de la actividad',
   'La fecha no corresponde',
 ]
-
-function formatDate(dateValue: string): string {
-  const parsed = parseLocalDate(dateValue)
-  if (Number.isNaN(parsed.getTime())) return dateValue
-  return new Intl.DateTimeFormat('es-EC', { day: '2-digit', month: 'short', year: 'numeric' }).format(parsed)
-}
 
 function LedgerColumnHeader() {
   return (
@@ -103,30 +101,27 @@ function ReviewList({ logs, actionState, onApprove, onReject }: ReviewListProps)
 
   return (
     <Ledger header={<LedgerColumnHeader />}>
-      {logs
-        .slice()
-        .reverse()
-        .map((log) => (
-          <LedgerRow key={log.id} syncState={log.syncState}>
-            <span className="font-data text-14 text-ink sm:w-28">{formatDate(log.date)}</span>
-            <span className="font-data text-13 text-inkSoft sm:w-28">
-              {log.startTime}–{log.endTime}
-            </span>
-            <span className="font-data text-14 text-ink sm:w-14">{log.hours}</span>
-            <span className="flex-1 text-14 text-inkBody">{log.activity}</span>
-            <span className="sm:w-32">
-              <StatusBadge status={log.status} />
-            </span>
-            <span className="flex flex-wrap justify-end gap-1.5 sm:w-44">
-              <ReviewActions
-                log={log}
-                state={actionState[log.id] ?? null}
-                onApprove={onApprove}
-                onReject={onReject}
-              />
-            </span>
-          </LedgerRow>
-        ))}
+      {logs.map((log) => (
+        <LedgerRow key={log.id} syncState={log.syncState}>
+          <span className="font-data text-14 text-ink sm:w-28">{formatDate(log.date)}</span>
+          <span className="font-data text-13 text-inkSoft sm:w-28">
+            {log.startTime}–{log.endTime}
+          </span>
+          <span className="font-data text-14 text-ink sm:w-14">{log.hours}</span>
+          <span className="flex-1 text-14 text-inkBody">{log.activity}</span>
+          <span className="sm:w-32">
+            <StatusBadge status={log.status} />
+          </span>
+          <span className="flex flex-wrap justify-end gap-1.5 sm:w-44">
+            <ReviewActions
+              log={log}
+              state={actionState[log.id] ?? null}
+              onApprove={onApprove}
+              onReject={onReject}
+            />
+          </span>
+        </LedgerRow>
+      ))}
     </Ledger>
   )
 }
@@ -263,6 +258,7 @@ export function ReviewHoursPage() {
   const [actionState, setActionState] = useState<Record<number, ActionState>>({})
   const [reviewError, setReviewError] = useState<string | null>(null)
   const [rejectingLog, setRejectingLog] = useState<LocalHourLog | null>(null)
+  const { status, setStatus, query, setQuery, visibleLogs, paged } = useHourLogView(logs)
 
   async function reviewLog(logId: number, status: 'APPROVED' | 'REJECTED', note?: string) {
     setReviewError(null)
@@ -315,6 +311,8 @@ export function ReviewHoursPage() {
 
       <HoursProgressPanel hours={hours} note={pendingNote(pendingCount)} />
 
+      <TutorAiSummaryCard logs={logs} />
+
       {reviewError ? (
         <p role="alert" className="rounded-lg bg-chipVoid px-4 py-3 text-13 text-void">
           {reviewError}
@@ -323,17 +321,33 @@ export function ReviewHoursPage() {
 
       <Panel
         toolbar={
-          <span className="ml-auto font-data text-12 text-inkSoft">
-            {plural(pendingCount, 'registro', 'registros')} sin revisar
-          </span>
+          <div className="flex w-full flex-wrap items-center justify-between gap-2">
+            <span className="font-display text-14 font-semibold text-ink">
+              Bitácora de actividades
+            </span>
+            <span className="inline-flex items-center rounded-full border border-dotPending/25 bg-chipPending px-2.5 py-0.5 font-data text-12 font-semibold text-pending shadow-xs">
+              {plural(pendingCount, 'registro', 'registros')} sin revisar
+            </span>
+          </div>
         }
       >
-        <ReviewList
-          logs={logs}
-          actionState={actionState}
-          onApprove={(logId) => reviewLog(logId, 'APPROVED')}
-          onReject={setRejectingLog}
-        />
+        <HourLogFilters status={status} onStatusChange={setStatus} query={query} onQueryChange={setQuery} />
+
+        {logs.length > 0 && visibleLogs.length === 0 ? (
+          <EmptyState
+            title="Ningún registro coincide con los filtros"
+            description="Prueba con otro estado o con otro texto de búsqueda."
+          />
+        ) : (
+          <ReviewList
+            logs={paged.items}
+            actionState={actionState}
+            onApprove={(logId) => reviewLog(logId, 'APPROVED')}
+            onReject={setRejectingLog}
+          />
+        )}
+
+        <Pagination paged={paged} />
       </Panel>
 
       <RejectDialog

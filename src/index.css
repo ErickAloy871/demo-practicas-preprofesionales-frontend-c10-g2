@@ -48,24 +48,48 @@
   }
 
   body {
-    @apply bg-paper text-ink antialiased;
-    font-family: 'IBM Plex Sans Variable', system-ui, sans-serif;
+    @apply bg-paper text-ink antialiased selection:bg-chipStamp selection:text-stamp;
+    font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   }
 
-  /* Una sola familia para toda la interfaz: los títulos se distinguen por peso
-     y por un tracking negativo, no por otra tipografía. */
+  /* Tipografía limpia y amigable para títulos e interfaz */
   .font-display {
-    font-family: 'IBM Plex Sans Variable', system-ui, sans-serif;
-    letter-spacing: -0.01em;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    letter-spacing: -0.015em;
   }
 
+  /* Cifras, fechas y métricas: tipografía moderna con números tabulares para perfecta alineación */
   .font-data {
-    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     font-variant-numeric: tabular-nums;
   }
 
   :focus-visible {
     @apply outline-2 outline-offset-2 outline-[hsl(var(--stamp))];
+  }
+
+  /* Barras de desplazamiento sutiles y elegantes */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--line)) transparent;
+  }
+
+  *::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background: hsl(var(--line));
+    border-radius: 9999px;
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--inkMute));
   }
 
   @media (prefers-reduced-motion: reduce) {

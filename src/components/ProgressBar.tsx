@@ -29,14 +29,20 @@ export function ProgressBar({
       aria-valuemax={100}
       aria-label={label}
       className={cn(
-        'flex w-full overflow-hidden rounded-full',
+        'flex w-full overflow-hidden rounded-full shadow-inner',
         size === 'sm' ? 'h-[5px]' : 'h-2',
         onTint ? 'bg-surface' : 'bg-paperRule',
         className,
       )}
     >
-      <span className="block h-full bg-stamp" style={{ width: `${value}%` }} />
-      <span className="block h-full bg-dotPending" style={{ width: `${pendingValue}%` }} />
+      <span
+        className="block h-full bg-stamp transition-all duration-500 ease-out"
+        style={{ width: `${value}%` }}
+      />
+      <span
+        className="block h-full bg-dotPending transition-all duration-500 ease-out"
+        style={{ width: `${pendingValue}%` }}
+      />
     </div>
   )
 }
