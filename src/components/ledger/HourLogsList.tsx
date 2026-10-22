@@ -20,20 +20,8 @@ import { Ledger, LedgerHeaderRow } from '@/components/ledger/Ledger'
 import { LedgerRow } from '@/components/ledger/LedgerRow'
 import { EmptyState } from '@/components/Panel'
 import { StatusBadge } from '@/components/StatusBadge'
-import { parseLocalDate } from '@/lib/date'
+import { formatDate } from '@/lib/date'
 import type { LocalHourLog } from '@/offline/db'
-
-// ─── Helper de formato de fecha (igual que en HourLogsPage) ──────────────────
-
-function formatDate(dateValue: string): string {
-  const parsed = parseLocalDate(dateValue)
-  if (Number.isNaN(parsed.getTime())) return dateValue
-  return new Intl.DateTimeFormat('es-EC', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  }).format(parsed)
-}
 
 // ─── Cabecera de columnas ─────────────────────────────────────────────────────
 
@@ -96,15 +84,12 @@ const HourLogRow = memo(
 // ─── Lista virtualizada ───────────────────────────────────────────────────────
 
 interface HourLogsListProps {
-  /** Registros en orden cronológico ascendente (más reciente al final). */
+  /** Registros ya ordenados para mostrar: el más reciente primero. */
   logs: LocalHourLog[]
 }
 
 /**
  * Renderiza la lista de registros de horas con virtualización.
- *
- * La lista llega en orden `sortBy('date')` (ascendente) pero se invierte para
- * mostrar el registro más reciente primero, tal como hacía la versión original.
  *
  * Con virtualización, el DOM mantiene únicamente ~10-15 nodos visibles
  * independientemente del tamaño del dataset.
@@ -119,10 +104,7 @@ export function HourLogsList({ logs }: HourLogsListProps) {
     )
   }
 
-  // Invertimos el arreglo una sola vez (fuera del render de cada fila)
-  const reversed = [...logs].reverse()
-
-  return <VirtualList logs={reversed} />
+  return <VirtualList logs={logs} />
 }
 
 // ─── Componente de virtualización (separado para que el hook sea válido) ──────
